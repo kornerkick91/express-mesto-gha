@@ -44,8 +44,38 @@ const createUser = (req, res) => {
     });
 };
 
+const updateProfile = (req, res) => {
+  const { name, about } = req.body;
+  const owner = req.user._id;
+
+  User.findByIdAndUpdate(owner, { name, about }, { new: true, runValidators: true })
+    .then((user) => findUser(user, res))
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        return res.status(ERROR_INCORRECT_DATA).send({ message: 'Переданы некорректные данные при обновлении профиля.' });
+      }
+      return res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка.' });
+    });
+};
+
+const updateAvatar = (req, res) => {
+  const avatar = req.body;
+  const owner = req.user._id;
+
+  User.findByIdAndUpdate(owner, avatar, { new: true, runValidators: true })
+    .then((user) => findUser(user, res))
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        return res.status(ERROR_INCORRECT_DATA).send({ message: 'Переданы некорректные данные при обновлении аватара.' });
+      }
+      return res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка.' });
+    });
+};
+
 module.exports = {
   getUsers,
+  getUserById,
   createUser,
-  getUserById
+  updateProfile,
+  updateAvatar
 };
