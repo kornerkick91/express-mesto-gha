@@ -45,8 +45,53 @@ const deleteCard = (req, res) => {
     });
 };
 
+const findCard = (card, res) => {
+  if (card) {
+    return res.send(card);
+  }
+  return res.status(ERROR_NOT_FOUND).send({ message: 'Запрашиваемая карточка не найдена.' });
+};
+
+const putLikeCard = (req, res) => {
+  const owner = req.user._id;
+  const { cardId } = req.params;
+
+  Card.findByIdAndUpdate(
+    cardId,
+    { $addToSet: { likes: owner } },
+    { new: true, runValidators: true }
+  )
+    .then((card) => findCard(card, res))
+    .catch((error) => {
+      if (error.name === 'CastError') {
+        return res.status(ERROR_INCORRECT_DATA).send({ message: 'Введен некорректный _id.' });
+      }
+      return res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка.' });
+    });
+};
+
+const deleteLikeCard = (req, res) => {
+  const owner = req.user._id;
+  const { cardId } = req.params;
+
+  Card.findByIdAndUpdate(
+    cardId,
+    { $pull: { likes: owner } },
+    { new: true, runValidators: true }
+  )
+    .then((card) => findCard(card, res))
+    .catch((error) => {
+      if (error.name === 'CastError') {
+        return res.status(ERROR_INCORRECT_DATA).send({ message: 'Введен некорректный _id.' });
+      }
+      return res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка.' });
+    });
+};
+
 module.exports = {
   getCards,
   createCard,
-  deleteCard
+  deleteCard,
+  putLikeCard,
+  deleteLikeCard
 };
