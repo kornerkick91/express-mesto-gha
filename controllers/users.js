@@ -5,14 +5,14 @@ const findUser = (user, res) => {
   if (user) {
     return res.send(user);
   }
-  return res.status(ERROR_NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' });
+  return res.status(ERROR_NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден.' });
 };
 
-const getUsers = (res) => {
+const getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
     .catch(() => {
-      res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка' });
+      res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка.' });
     });
 };
 
@@ -23,9 +23,9 @@ const getUserById = (req, res) => {
     .then((user) => findUser(user, res))
     .catch((error) => {
       if (error.name === 'CastError') {
-        return res.status(ERROR_INCORRECT_DATA).send({ message: 'Введен некорректный _id' });
+        return res.status(ERROR_INCORRECT_DATA).send({ message: 'Введен некорректный _id.' });
       }
-      return res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка' });
+      return res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка.' });
     });
 };
 
@@ -38,9 +38,9 @@ const createUser = (req, res) => {
     })
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        return res.status(ERROR_INCORRECT_DATA).send({ message: 'Переданы некорректные данные при создании профиля' });
+        return res.status(ERROR_INCORRECT_DATA).send({ message: 'Переданы некорректные данные при создании профиля.' });
       }
-      return res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка' });
+      return res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка.' });
     });
 };
 
