@@ -57,7 +57,7 @@ const deleteCardValidation = {
   })
 };
 
-const putLikeCardValidation = {
+const likeCardValidation = {
   params: Joi.object({
     cardId: Joi.string().hex().length(24).messages({
       'string.hex': 'Введен некорректный id.'
@@ -108,7 +108,7 @@ module.exports = {
   updateAvatarValidation,
   createCardValidation,
   deleteCardValidation,
-  putLikeCardValidation,
+  likeCardValidation,
   signinValidation,
   signupValidation
 };
