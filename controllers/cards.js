@@ -1,17 +1,15 @@
-const { ERROR_INCORRECT_DATA, ERROR_NOT_FOUND, ERROR_BY_DEFAULT } = require('../utils/constants');
+const customError = require('../errors');
 const Card = require('../models/card');
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => {
       res.send(cards);
     })
-    .catch(() => {
-      res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка.' });
-    });
+    .catch(next);
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const { name, link } = req.body;
   const { _id } = req.user;
 
@@ -21,38 +19,33 @@ const createCard = (req, res) => {
     })
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        return res.status(ERROR_INCORRECT_DATA).send({ message: 'Переданы некорректные данные при создании карточки.' });
+        next(new customError.IncorrectDataError('Переданы некорректные данные при создании карточки.'));
       }
-      return res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка.' });
+      next(error);
     });
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
 
   Card.deleteOne({ _id: cardId })
     .then((card) => {
       if (card.deletedCount === 0) {
-        return res.status(ERROR_NOT_FOUND).send({ message: 'Запрашиваемая карточка не найдена.' });
+        throw new customError.NotFoundError('Запрашиваемая карточка не найдена.');
       }
       return res.send({ message: 'Карточка удалена!' });
     })
-    .catch((error) => {
-      if (error.name === 'CastError') {
-        return res.status(ERROR_INCORRECT_DATA).send({ message: 'Введен некорректный _id.' });
-      }
-      return res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка.' });
-    });
+    .catch(next);
 };
 
 const findCard = (card, res) => {
-  if (card) {
-    return res.send(card);
+  if (!card) {
+    throw new customError.NotFoundError('Запрашиваемая карточка не найдена.');
   }
-  return res.status(ERROR_NOT_FOUND).send({ message: 'Запрашиваемая карточка не найдена.' });
+  return res.send(card);
 };
 
-const putLikeCard = (req, res) => {
+const putLikeCard = (req, res, next) => {
   const owner = req.user._id;
   const { cardId } = req.params;
 
@@ -62,15 +55,10 @@ const putLikeCard = (req, res) => {
     { new: true, runValidators: true }
   )
     .then((card) => findCard(card, res))
-    .catch((error) => {
-      if (error.name === 'CastError') {
-        return res.status(ERROR_INCORRECT_DATA).send({ message: 'Введен некорректный _id.' });
-      }
-      return res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка.' });
-    });
+    .catch(next);
 };
 
-const deleteLikeCard = (req, res) => {
+const deleteLikeCard = (req, res, next) => {
   const owner = req.user._id;
   const { cardId } = req.params;
 
@@ -80,12 +68,7 @@ const deleteLikeCard = (req, res) => {
     { new: true, runValidators: true }
   )
     .then((card) => findCard(card, res))
-    .catch((error) => {
-      if (error.name === 'CastError') {
-        return res.status(ERROR_INCORRECT_DATA).send({ message: 'Введен некорректный _id.' });
-      }
-      return res.status(ERROR_BY_DEFAULT).send({ message: 'На сервере произошла ошибка.' });
-    });
+    .catch(next);
 };
 
 module.exports = {
