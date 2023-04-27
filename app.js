@@ -4,7 +4,9 @@ const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
 const sign = require('./routes/auth');
 const auth = require('./middlewares/auth');
+const centralErrorsHandler = require('./middlewares/centralErrorsHandler');
 const router = require('./routes');
+const { NotFoundError } = require('./errors');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -20,25 +22,12 @@ app.use(router);
 
 app.use(errors());
 
-app.use((req, res) => {
-  res.status(404).send({ message: 'Был запрошен несуществующий роут.' });
+app.use((req, res, next) => {
+  const err = new NotFoundError('Был запрошен несуществующий роут.');
+  next(err);
 });
 
-app.use((err, req, res, next) => {
-  const { statusCode = 500, message } = err;
-
-  res.status(statusCode).send({
-    message: statusCode === 500
-      ? 'На сервере произошла ошибка'
-      : message
-  });
-
-  next();
-});
-
-app.use((req, res) => {
-  res.status(404).send({ message: 'Был запрошен несуществующий роут.' });
-});
+app.use(centralErrorsHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

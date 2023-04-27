@@ -50,11 +50,16 @@ const createUser = (req, res, next) => {
           });
         })
         .catch((error) => {
-          if (error.code === 11000) {
+          if (error.name === 'ValidationError') {
+            next(new customError.IncorrectDataError('Переданы некорректные данные при создании пользователя.'));
+          } else if (error.code === 11000) {
             next(new customError.EmailUseError('Пользователь с таким email уже существует.'));
+          } else {
+            next(error);
           }
         });
-    });
+    })
+    .catch(next);
 };
 
 const login = (req, res, next) => {
@@ -68,7 +73,7 @@ const login = (req, res, next) => {
       }
       return bcrypt.compare(password, user.password).then((matched) => {
         if (!matched) {
-          next(new customError.AuthFailedError('Введена неверная почта или пароль.'));
+          return next(new customError.AuthFailedError('Введена неверная почта или пароль.'));
         }
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '10d' });
         return res.send({ token });
@@ -83,7 +88,13 @@ const updateProfile = (req, res, next) => {
 
   User.findByIdAndUpdate(owner, { name, about }, { new: true, runValidators: true })
     .then((user) => findUser(user, res))
-    .catch(next);
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        next(new customError.IncorrectDataError('Переданы некорректные данные при обновлении профиля пользователя.'));
+      } else {
+        next(error);
+      }
+    });
 };
 
 const updateAvatar = (req, res, next) => {
@@ -92,7 +103,13 @@ const updateAvatar = (req, res, next) => {
 
   User.findByIdAndUpdate(owner, avatar, { new: true, runValidators: true })
     .then((user) => findUser(user, res))
-    .catch(next);
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        next(new customError.IncorrectDataError('Переданы некорректные данные при обновлении аватара пользователя.'));
+      } else {
+        next(error);
+      }
+    });
 };
 
 module.exports = {
